@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simple Breathing Exercise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #fceff5, #fa91be);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      color: #c50357;
+    }
+
+    .circle {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #8f023a 0%, #f376a8 70%, transparent 100%);
+      border-radius: 50%;
+      transition: all 1s ease-in-out;
+      margin-bottom: 40px;
+      margin-top: 20px;
+    }
+
+    .inhale {
+      transform: scale(1.5);
+    }
+
+    .exhale {
+      transform: scale(1);
+    }
+
+    .instructions {
+      text-align: center;
+      color: #9b1e54;
+    }
+
+    #breathText {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    #timer {
+      font-size: 3rem;
+      font-family: 'Lora', serif;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin-top: 20px;
+      border: none;
+      border-radius: 25px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>Breathing Exercise</h1>
+    <div class="circle" id="circle"></div>
+    <div class="instructions">
+      <div id="breathText">Ready?</div>
+      <div id="timer">0</div>
+    </div>
+    <button id="startBtn">Start</button>
+    <button onclick="history.back()">Back</button> <!-- Back Button -->
+  </div>
+
+  <script>
+    const circle = document.getElementById('circle');
+    const breathText = document.getElementById('breathText');
+    const timerDisplay = document.getElementById('timer');
+    const startBtn = document.getElementById('startBtn');
+
+    let isRunning = false;
+    let interval;
+
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        clearInterval(interval);
+        breathText.textContent = "Paused";
+        timerDisplay.textContent = "0";
+        circle.className = 'circle';
+        startBtn.textContent = "Start";
+        isRunning = false;
+      } else {
+        isRunning = true;
+        startBtn.textContent = "Stop";
+        runBreathing();
+      }
+    });
+
+    function runBreathing() {
+      let isInhale = true;
+
+      const cycle = () => {
+        let time = 4;
+        breathText.textContent = isInhale ? 'Inhale' : 'Exhale';
+        circle.className = `circle ${isInhale ? 'inhale' : 'exhale'}`;
+        timerDisplay.textContent = time;
+
+        let countdown = setInterval(() => {
+          time--;
+          timerDisplay.textContent = time;
+          if (time <= 0) {
+            clearInterval(countdown);
+            isInhale = !isInhale;
+            if (isRunning) {
+              setTimeout(cycle, 500);
+            }
+          }
+        }, 1000);
+      };
+
+      cycle();
+    }
+  </script>
+</body>
+</html>

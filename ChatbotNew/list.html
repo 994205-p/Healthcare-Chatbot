@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Exercise List</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f7a4c8;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      width: 350px;
+      height: 500px;
+      background: #ee76aa;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      gap: 25px;
+    }
+    h1 {
+      color: #e90b6b;
+      margin: 0 0 20px 0;
+      font-weight: 700;
+      font-size: 1.8rem;
+      text-align: center;
+      width: 100%;
+    }
+    button {
+      width: 100%;
+      padding: 12px 0;
+      font-size: 1rem;
+      border-radius: 25px;
+      border: 2px solid #00796b;
+      background-color: #d1f0ea;
+      color: #00796b;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #a3d8cc;
+      color: #004d40;
+      border-color: #004d40;
+    }
+
+    /* Back button different color */
+    #backBtn {
+      border-color: #e57393;
+      background-color: #f8d7da;
+      color: #cc2e6e;
+    }
+    #backBtn:hover {
+      background-color: #ef9a9a;
+      color: #e03473;
+      border-color: #cc2e6e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Exercise List</h1>
+
+    <button onclick="window.location.href='inhale.html'">Go to Breathing</button>
+    <button onclick="window.location.href='eyeex.html'">Go to Eye Movement</button>
+    <button onclick="window.location.href='strech.html'">Go to Stretching</button>
+    <button id="backBtn" onclick="history.back()">Back</button>
+  </div>
+</body>
+</html>

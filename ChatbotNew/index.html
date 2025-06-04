@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Healthcare Assistant</title>
+  <style>
+    :root {
+      --primary-color: #74003c;
+      --secondary-color: #8c0343;
+      --background-light: #ffd6e3;
+      --text-dark: #2c2c2c;
+      --background-dark-mode: #1e1e1e;
+      --text-light-mode: #f0f0f0;
+      --input-border-light: #ccc;
+      --input-background-light: #fff;
+      --dropdown-background-light: #fff;
+      --dropdown-text-light: #000;
+      --dropdown-hover-light: #f0f0f0;
+      --login-overlay-light: rgba(255, 215, 230, 0.97);
+      --login-box-light: #fff;
+    }
+
+    .dark-mode {
+      --primary-color: #201e1e;
+      --secondary-color: #333;
+      --background-light: #2b2b2b;
+      --text-dark: #5d5a5a;
+      --input-border-light: #555;
+      --input-background-light: #444;
+      --dropdown-background-light: #333;
+      --dropdown-text-light: #f0f0f0;
+      --dropdown-hover-light: #555;
+      --login-overlay-light: rgba(49, 43, 43, 0.8);
+      --login-box-light: #333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background-color: var(--primary-color);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #chat-container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      height: 90vh;
+      background-color: var(--background-light);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chat-box {
+      width: 60%;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--background-light);
+    }
+
+    .chat-header p {
+      font-size: 18px;
+      color: var(--text-dark);
+    }
+
+    .chat-button {
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      margin-top: 20px;
+      padding-right: 10px;
+    }
+
+    .chat-message {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .chat-message p {
+      margin: 0;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 75%;
+    }
+
+    .chat-message img.avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    .chat-message.user {
+      justify-content: flex-end;
+    }
+
+    .chat-message.user p {
+      background: #e8c1d1;
+      color: var(--text-dark);
+      order: 1;
+      margin-left: 10px;
+    }
+
+    .chat-message.user img.avatar {
+      order: 2;
+    }
+
+    .chat-message.bot {
+      justify-content: flex-start;
+    }
+
+    .chat-message.bot p {
+      background: #ffffff;
+      color: var(--text-dark);
+      margin-right: 10px;
+    }
+
+    .chat-message.bot img.avatar {
+      margin-right: 10px;
+    }
+
+    .chat-input {
+      display: flex;
+      margin-top: 30px;
+      border: 1px solid var(--input-border-light);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--input-background-light);
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: var(--text-dark);
+      background: transparent;
+    }
+
+    .mic-button {
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .chat-image {
+      width: 40%;
+      background: linear-gradient(to bottom, #cc2e6e, #e872a5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+    }
+
+    .profile-card {
+      text-align: center;
+    }
+
+    .profile-card .badge {
+      background: #fff;
+      color: var(--secondary-color);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+
+    .profile-card img {
+      width: 250px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .menu-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: var(--dropdown-background-light);
+      color: var(--dropdown-text-light);
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 10;
+    }
+
+    .dropdown button {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .dropdown button:hover {
+      background-color: var(--dropdown-hover-light);
+    }
+
+    #login-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--login-overlay-light);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    #login-box {
+      background: var(--login-box-light);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    #login-box input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border-light);
+      color: var(--text-dark);
+      background: transparent;
+    }
+
+    #login-box button {
+      background: var(--secondary-color);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      #chat-container {
+        flex-direction: column;
+        height: auto;
+        border-radius: 0;
+        width: 100%;
+        min-height: 100vh;
+      }
+
+      .chat-box {
+        width: 100%;
+        padding: 20px;
+      }
+
+      .chat-image {
+        width: 100%;
+        min-height: 200px;
+      }
+
+      .profile-card img {
+        width: 150px;
+      }
+
+      .menu-button {
+        top: 10px;
+        right: 10px;
+      }
+
+      .dropdown {
+        top: 40px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div class="chat-box">
+      <div class="chat-header">
+        <p>Hello! I'm <strong>Dr. Emily</strong>, your <strong>AI Agent</strong> healthcare advisor. How can I help you today?</p>
+        <button class="chat-button" onclick="window.location.href='insights.html'">Explore health prediction insights</button>
+      </div>
+
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <div class="chat-input">
+        <input type="text" placeholder="Type here" id="user-input"/>
+        <button class="mic-button" id="send-btn">➤</button>
+      </div>
+    </div>
+
+    <div class="chat-image">
+      <div class="profile-card">
+        <button class="menu-button" id="menu-button">⋮</button>
+        <div class="dropdown" id="dropdown">
+          <button id="login-option">Login</button>
+          <button id="settings-option">Settings</button>
+          <button id="dark-mode-toggle">Dark Mode</button>
+          <button onclick="window.location.href='list.html'">Exercise</button>
+        </div>
+        <p><strong>Dr. Emily</strong> <span class="badge">AI</span></p>
+        <p>Healthcare Advisor</p>
+        <img src="dr-emily-profile.jpg" alt="Dr. Emily"/>
+      </div>
+    </div>
+  </div>
+
+  <div id="login-container">
+    <div id="login-box">
+      <h2>Login</h2>
+      <input type="text" placeholder="Username" required />
+      <input type="password" placeholder="Password" required />
+      <button id="login-btn">Submit</button>
+    </div>
+  </div>
+
+  <script>
+    const menuButton = document.getElementById('menu-button');
+    const dropdown = document.getElementById('dropdown');
+    const loginContainer = document.getElementById('login-container');
+    const loginOption = document.getElementById('login-option');
+    const loginBtn = document.getElementById('login-btn');
+    const settingsOption = document.getElementById('settings-option');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const body = document.body;
+    const sendBtn = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    menuButton.addEventListener('click', () => {
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    loginOption.addEventListener('click', () => {
+      dropdown.style.display = 'none';
+      loginContainer.style.display = 'flex';
+    });
+
+    loginBtn.addEventListener('click', () => {
+      loginContainer.style.display = 'none';
+      alert("Logged in!");
+    });
+
+    settingsOption.addEventListener('click', () => {
+      dropdown.style.display = 'none';
+      alert("Settings panel will be implemented here.");
+    });
+
+    darkModeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+    });
+
+    window.addEventListener('click', (event) => {
+      if (!event.target.matches('#menu-button')) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    const getBotReply = (msg) => {
+      msg = msg.toLowerCase();
+      if (msg.includes("hi")) return "Hello! How can I assist you today?";
+			if (msg.includes("hello")) return "Hi there! What can I do for you?";
+			if (msg.includes("hey")) return "Hey! How’s it going? Need any help?";
+			if (msg.includes("good morning")) return "Good morning! Hope you have a great day ahead. How can I help?";
+			if (msg.includes("good afternoon")) return "Good afternoon! What can I assist you with today?";
+			if (msg.includes("good evening")) return "Good evening! How can I make your day better?";
+      if (msg.includes("pcos") || msg.includes("polycystic ovary syndrome")) return "Symptoms: irregular periods, weight gain, acne, excessive hair growth. Remedy: maintain healthy diet, exercise regularly, consult doctor for medication. Polycystic Ovary Syndrome (PCOS) is a common hormonal disorder that affects people with ovaries, usually during reproductive years. It can cause irregular periods, excess hair growth, acne, weight gain, and sometimes small cysts on the ovaries. PCOS is linked to insulin resistance, which can increase the risk of type 2 diabetes and other health issues. While there’s no cure, it can be managed through lifestyle changes like healthy eating, regular exercise, and, if needed, medications to regulate hormones and menstrual cycles. If you think you might have PCOS, it's important to see a doctor for proper diagnosis and treatment.";
+      if (msg.includes("endometriosis")) return "Symptoms: painful periods, pelvic pain, heavy bleeding. Remedy: pain relief meds, hormonal therapy, consult specialist.";
+      if (msg.includes("vaginitis")) return "Symptoms: itching, unusual discharge, odor, irritation. Remedy: keep area clean and dry, avoid irritants, use prescribed antifungal or antibiotic creams.";
+      if (msg.includes("uterine fibroids")) return "Symptoms: heavy menstrual bleeding, pelvic pain, frequent urination. Remedy: medication to control symptoms, surgery if needed.";
+      if (msg.includes("menopause")) return "Symptoms: hot flashes, night sweats, mood changes, irregular periods. Remedy: lifestyle changes, hormone therapy, counseling.";
+      if (msg.includes("headache")) return "A headache can be caused by many things like stress, lack of sleep, dehydration, eye strain, or even hunger. Try resting in a quiet, dark room, drinking water, and avoiding screens for a while. Over-the-counter pain relievers like paracetamol or ibuprofen can help. If the headache is very severe, comes with vision changes, or lasts for days, it’s best to see a doctor.";
+      if (msg.includes("doctor")) return " I'm not a doctor. I can provide information based on medical literature and general health knowledge, but it's always best to consult a licensed healthcare professional for medical advice, diagnosis, or treatment. If you have a specific question, I'm happy to help explain or explore it with you.";
+      if (msg.includes("cold")) return "A cold is a mild viral infection that causes symptoms like a runny nose, sore throat, cough, sneezing, and sometimes a mild fever. Rest, drink plenty of fluids, and eat light, healthy food. You can use steam inhalation, saltwater gargles, and over-the-counter medicines to relieve symptoms. Most colds go away on their own in about 7–10 days. See a doctor if it lasts longer or gets worse.";
+      if (msg.includes("diabetes")) return "Diabetes is a chronic condition where the body can't properly regulate blood sugar levels. There are two main types: Type 1 (the body doesn’t make insulin) and Type 2 (the body doesn’t use insulin well). Common symptoms include frequent urination, thirst, tiredness, and slow healing of wounds. It’s managed with healthy eating, regular exercise, blood sugar monitoring, and sometimes medication or insulin. Early diagnosis and control are important to prevent complications like nerve, eye, and kidney problems.";
+      if (msg.includes("cough")) return "A cough is your body’s way of clearing your airways from irritants like mucus, dust, or infections. It can be dry or produce phlegm. For relief, stay hydrated, rest, and use a humidifier or honey if it’s a dry cough. Over-the-counter cough medicines can help, but avoid them if you have a productive cough without advice from a doctor. See a doctor if the cough lasts more than two weeks, is severe, or comes with fever or difficulty breathing.";
+      if (msg.includes("nausea")) return "Nausea can be caused by indigestion, infection, or even stress. Try eating light meals and staying hydrated.";
+      if (msg.includes("vomiting")) return "Vomiting is your body’s way of getting rid of something harmful, like an infection or spoiled food. Rest and drink small sips of water or oral rehydration solutions to stay hydrated. Avoid solid food until you feel better, then eat bland foods like toast or bananas. If vomiting lasts more than 24 hours, is severe, or comes with dehydration, high fever, or blood, see a doctor right away.";
+      if (msg.includes("dizziness")) return "Dizziness can happen for many reasons like dehydration, low blood sugar, standing up too fast, or inner ear problems. To help, sit or lie down until it passes, drink water, and avoid sudden movements. If dizziness comes with fainting, chest pain, severe headache, or lasts a long time, see a doctor to check for underlying causes.";
+      if (msg.includes("fatigue")) return "Fatigue can result from stress, lack of sleep, or an underlying illness. Rest well and monitor if it persists.";
+      if (msg.includes("rash")) return "SA rash is a change in your skin that can look red, bumpy, itchy, or irritated. It can be caused by allergies, infections, heat, or skin conditions like eczema. Keep the area clean and avoid scratching to prevent infection. Use gentle moisturizers or over-the-counter creams for itching. If the rash spreads, blisters, or comes with fever, it’s best to see a doctor.";
+      if (msg.includes("chills")) return "Chills often accompany fever or infection. Keep warm and monitor your temperature.";
+      if (msg.includes("diarrhea")) return "Diarrhea is when you have loose, watery stools more often than usual, often caused by infections, food, or stress. To feel better, drink plenty of fluids to avoid dehydration and eat bland foods like bananas, rice, and toast. Avoid dairy, caffeine, and fatty foods until you recover. If diarrhea lasts more than two days, is very severe, or comes with fever or blood, see a doctor.";
+      if (msg.includes("abdominal pain")) return "Abdominal pain can come from many causes like indigestion, gas, infections, or muscle strain. Rest, drink water, and try eating light, bland foods. If the pain is severe, sudden, lasts more than a day, or comes with fever, vomiting, or bleeding, you should see a doctor right away.";
+      if (msg.includes("back pain")) return "Back pain is often caused by muscle strain, poor posture, or injury. Rest, apply heat or cold packs, and try gentle stretching or over-the-counter pain relievers. Avoid heavy lifting or sudden movements. If the pain is severe, lasts more than a week, or comes with numbness or weakness, see a doctor.";
+      if (msg.includes("chest pain")) return "Chest pain can be serious and should never be ignored. It might be caused by heart problems, muscle strain, acid reflux, or anxiety. If the pain is sudden, severe, or comes with shortness of breath, sweating, or pain spreading to your arm or jaw, call emergency services immediately. For milder pain, see a doctor to find out the cause and get proper treatment.";
+      if (msg.includes("blurred vision")) return "Blurred vision may be caused by eye strain, migraines, or blood sugar issues. Get your eyes and health checked.";
+      if (msg.includes("itching")) return "Itching can happen due to dry skin, allergies, insect bites, or infections. Avoid scratching to prevent skin damage or infection. Use moisturizers or anti-itch creams like hydrocortisone. If itching is severe, widespread, or comes with a rash or swelling, it’s best to see a doctor for proper diagnosis and treatment.";
+      if (msg.includes("breathlessness")) return "Shortness of breath may relate to asthma, heart issues, or anxiety. Rest and seek help if it worsens.";
+      if (msg.includes("loss of appetite")) return "Loss of appetite can happen due to illness, stress, medications, or digestive problems. Try eating small, light meals and stay hydrated. Rest and avoid strong smells or foods that upset you. If it lasts more than a week or comes with weight loss, fever, or severe fatigue, see a doctor to find the cause.";
+      if (msg.includes("sore throat")) return "A sore throat is usually caused by a viral infection, like a cold, and feels scratchy or painful when swallowing. Drink warm fluids, rest your voice, and try saltwater gargles to ease discomfort. Over-the-counter pain relievers can help too. If it lasts more than a week, is very painful, or comes with fever, see a doctor.";
+      if (msg.includes("sneezing")) return "Sneezing is a natural reflex to clear your nose from irritants like dust, pollen, or viruses. It often happens with colds or allergies. To feel better, avoid triggers, keep your environment clean, and stay hydrated. If sneezing is severe, persistent, or comes with other symptoms like fever or difficulty breathing, see a doctor. Sneezing is often caused by allergies or a common cold. Try to avoid known allergens and get rest.";
+      if (msg.includes("swelling")) return "Swelling could be due to injury or infection. Elevate the area and apply ice if needed.";
+      if (msg.includes("joint pain")) return "Joint pain can be caused by injury, arthritis, or inflammation. Rest the affected joint, apply ice or heat, and try gentle stretches. Over-the-counter pain relievers may help reduce discomfort. If the pain is severe, lasts more than a few days, or comes with swelling and redness, see a doctor.";
+      if (msg.includes("yellow eyes") || msg.includes("yellowish skin")) return "Yellowing may indicate jaundice or liver issues. Seek medical evaluation promptly.";
+      if (msg.includes("itching")) return "Itching may indicate a fungal infection, drug reaction, or hepatitis. Keep the area clean and dry, use antifungal or soothing creams, and avoid scratching. If it spreads or lasts over a week, consult a dermatologist.";
+			if (msg.includes("skin rash")) return "Skin rashes can result from fungal infections, allergies, or chickenpox. Keep the skin cool and clean, use mild lotions, and avoid harsh soaps. See a doctor if the rash is painful or persistent.";
+			if (msg.includes("vomiting")) return "Vomiting is a common symptom in conditions like GERD, gastroenteritis, and dengue. Stay hydrated, eat bland foods, and avoid strong odors. If vomiting is severe or contains blood, seek medical help immediately.";
+			if (msg.includes("chest pain")) return "Chest pain may be caused by GERD or hypertension. Avoid fatty foods, caffeine, and stress. If chest pain is severe, radiates to the arm or jaw, or is accompanied by shortness of breath, go to the ER immediately.";
+			if (msg.includes("blurred and distorted vision")) return "Blurred vision might be due to migraine or diabetes. Monitor your blood sugar levels and take breaks from screens. If vision problems persist, consult an ophthalmologist.";
+			if (msg.includes("fatigue")) return "Fatigue can result from diabetes, dengue, or hepatitis. Ensure you're getting enough rest, hydrate well, and maintain a nutritious diet. Persistent fatigue warrants a full health checkup.";
+			if (msg.includes("diarrhoea")) return "Diarrhea may be caused by gastroenteritis or typhoid. Use oral rehydration solutions to prevent dehydration and avoid solid foods. If it lasts more than 2 days or contains blood, visit a doctor.";
+			if (msg.includes("high fever")) return "High fever is a key symptom of dengue, typhoid, or infection. Stay hydrated, rest, and take fever-reducing medication. If it persists more than 3 days or worsens, seek immediate medical care.";
+			if (msg.includes("yellowing of eyes") || msg.includes("yellowish_skin")) return "Yellowing of the skin or eyes is a sign of jaundice, seen in hepatitis. Avoid alcohol and oily food, and consult a doctor for liver function tests.";
+			if (msg.includes("neck pain")) return "Neck pain can indicate cervical spondylosis. Avoid straining your neck, use ergonomic support, and apply warm compresses. If pain persists or is accompanied by numbness, consult a spine specialist.";
+			if (msg.includes("dehydration")) return "Dehydration can result from vomiting, diarrhea, or fever. Drink water, ORS, or electrolyte-rich fluids frequently. Severe dehydration may require IV fluids from a hospital.";
+			if (msg.includes("cough")) return "Cough can be due to GERD, bronchial asthma, or infection. Stay away from irritants like smoke or dust, and use cough syrups or inhalers if prescribed. If it lasts more than 2 weeks, get a chest x-ray.";
+			if (msg.includes("nausea")) return "Nausea is common in hepatitis, dengue, and ulcers. Eat bland foods, avoid greasy meals, and stay upright after eating. If frequent or paired with other symptoms, consult your doctor.";
+      if (msg.includes("malaria")) return "Consult nearest hospital, avoid oily food, avoid non veg food, keep mosquitos out.";
+			if (msg.includes("allergy")) return "Apply calamine, cover area with bandage, use ice to compress itching.";
+			if (msg.includes("hypothyroidism")) return "Reduce stress, exercise, eat healthy, get proper sleep.";
+			if (msg.includes("psoriasis")) return "Wash hands with warm soapy water, stop bleeding using pressure, consult doctor, salt baths.";
+			if (msg.includes("gerd")) return "Avoid fatty spicy food, avoid lying down after eating, maintain healthy weight, exercise.";
+			if (msg.includes("chronic cholestasis")) return "Cold baths, anti itch medicine, consult doctor, eat healthy.";
+			if (msg.includes("hepatitis a")) return "Consult nearest hospital, wash hands thoroughly, avoid fatty spicy food, medication.";
+			if (msg.includes("osteoarthritis")) return "Acetaminophen, consult nearest hospital, follow up, salt baths.";
+			if (msg.includes("vertigo paroymsal")) return "Lie down, avoid sudden change in position, avoid abrupt head movement, relax.";
+			if (msg.includes("acne")) return "Bath twice, avoid fatty spicy food, drink plenty of water, avoid too many products.";
+			if (msg.includes("urinary tract infection")) return "Drink plenty of water, increase vitamin C intake, drink cranberry juice, take probiotics.";
+			if (msg.includes("varicose veins")) return "Lie down flat and raise the leg high, use warm water in bathing, use lemon juice to massage, eat healthy.";
+			if (msg.includes("aids")) return "Avoid open cuts, wear gloves, use clean needles, get vaccinated.";
+			if (msg.includes("diabetes")) return "Have balanced diet, exercise, consult doctor, follow up.";
+			if (msg.includes("gastroenteritis")) return "Stop eating solid food, avoid dairy, drink more fluid, rest.";
+			if (msg.includes("ear pain")) return "Ear pain may be due to an infection or wax buildup. Avoid poking inside the ear and see a doctor if the pain is sharp or persistent.";
+			if (msg.includes("eye redness")) return "Red eyes can result from allergies, infections, or irritation. Use clean water to rinse and avoid touching your eyes. Consult a doctor if it continues.";
+			if (msg.includes("palpitations")) return "Heart palpitations might result from stress, caffeine, or underlying heart issues. Try relaxation techniques. If they are frequent or severe, get a cardiac check-up.";
+			if (msg.includes("muscle cramp")) return "Muscle cramps can be caused by dehydration or overuse. Stretch gently, apply heat, and hydrate. If cramps are frequent, check with your doctor.";
+			if (msg.includes("nosebleed")) return "Nosebleeds often result from dry air or nose-picking. Sit upright, pinch your nose, and breathe through your mouth. If bleeding is frequent, consult a doctor.";
+			if (msg.includes("snoring")) return "Snoring could be linked to sleep apnea, obesity, or nasal blockage. Try sleeping on your side, avoiding alcohol, and maintaining a healthy weight.";
+			if (msg.includes("hair loss")) return "Hair loss may be related to stress, poor nutrition, or hormonal changes. Eat a balanced diet and reduce stress. See a dermatologist if it worsens.";
+			if (msg.includes("difficulty swallowing")) return "Swallowing difficulties may stem from throat infections or GERD. Avoid spicy food and stay hydrated. Persistent issues need medical attention.";
+			if (msg.includes("cold sweats")) return "Cold sweats can be caused by low blood sugar, anxiety, or shock. Sit or lie down and stay calm. Seek help if accompanied by chest pain or fainting.";
+			if (msg.includes("mouth ulcers")) return "Mouth ulcers often result from stress, injuries, or deficiencies. Avoid spicy foods, and use soothing gels. If they persist, consult a dentist.";
+			if (msg.includes("tongue discoloration")) return "Tongue discoloration can indicate infections, deficiencies, or oral hygiene issues. Maintain oral hygiene and seek evaluation if it doesn't clear up.";
+			if (msg.includes("bloating")) return "Bloating is often due to gas, overeating, or IBS. Avoid carbonated drinks, eat slowly, and stay active. Persistent bloating should be evaluated.";
+			if (msg.includes("hand tingling")) return "Tingling in hands might be due to nerve compression or vitamin deficiency. Adjust posture and consider B-vitamin supplements. If persistent, see a neurologist.";
+			if (msg.includes("lightheadedness")) return "Lightheadedness can come from low blood sugar, dehydration, or standing up too fast. Sit or lie down safely, and drink fluids. If frequent, see a doctor.";
+			if (msg.includes("numbness")) return "Numbness may be caused by nerve issues or poor circulation. Avoid pressure on limbs and get medical help if it lasts long or spreads.";
+			if (msg.includes("colic")) return "Colic in babies causes long crying spells. Try gentle rocking, burping, or warm baths. If it persists, consult a pediatrician.";
+			if (msg.includes("teething")) return "Teething may cause drooling, irritability, or mild fever. Offer a cold teether and comfort the baby. See a doctor if fever is high.";
+			if (msg.includes("diaper rash")) return "Diaper rash is common in infants. Keep the area dry, use barrier creams, and change diapers frequently.";
+			if (msg.includes("child fever")) return "In children, fever can indicate infection. Use age-appropriate fever reducers and keep them hydrated. See a doctor if it lasts over 2 days.";
+			if (msg.includes("ear infection")) return "Ear infections in kids can cause pain, fever, or irritability. Keep the child upright and see a pediatrician for treatment.";
+			if (msg.includes("depression")) return "Depression can cause sadness, low energy, and disinterest. Talk to someone, stay active, and consider professional help if it persists.";
+			if (msg.includes("insomnia")) return "Insomnia can result from stress or irregular routines. Try relaxing before bed, avoid screens, and maintain a consistent sleep schedule.";
+			if (msg.includes("panic attack")) return "Panic attacks cause rapid heartbeat, sweating, and fear. Try deep breathing and grounding exercises. Seek help if frequent.";
+			if (msg.includes("burnout")) return "Burnout stems from prolonged stress. Take breaks, set boundaries, and seek support. Recovery needs rest and self-care.";
+			if (msg.includes("social anxiety")) return "Social anxiety can make socializing feel overwhelming. Practice exposure gradually and consider cognitive behavioral therapy.";
+			if (msg.includes("eczema")) return "Eczema leads to dry, itchy skin. Use fragrance-free moisturizers, avoid triggers, and consult a dermatologist if severe.";
+			if (msg.includes("dandruff")) return "Dandruff causes flaky scalp. Use anti-dandruff shampoo and avoid harsh hair products. Persistent cases may need medicated treatment.";
+			if (msg.includes("hives")) return "Hives are itchy red welts due to allergies or stress. Antihistamines help. Seek care if breathing is affected.";
+			if (msg.includes("sunburn")) return "Sunburn can cause redness and pain. Apply aloe vera or cool compresses and stay out of the sun until healed.";
+			if (msg.includes("fungal infection")) return "Fungal infections cause itching, redness, or scaling. Keep the area dry and use antifungal creams. See a doctor if it doesn’t improve.";
+			if (msg.includes("hydration tips")) return "Staying well-hydrated is vital for overall health. Drink at least 8 glasses (2 liters) of water daily, and more if you’re active or in a hot environment. Include fluids like coconut water or oral rehydration salts when needed. Avoid sugary sodas or excessive caffeine, as they can dehydrate you.";
+			if (msg.includes("balanced diet")) return "A balanced diet fuels your body and prevents illness. Include fresh vegetables, fruits, whole grains, lean proteins, and healthy fats. Minimize intake of processed foods, sugars, and red meat. Portion control and mindful eating are key to maintaining energy and a healthy weight.";
+			if (msg.includes("stress")) return "Stress is your body’s response to challenges or pressure, and it can cause feelings of anxiety, irritability, or tiredness. To manage stress, try deep breathing, exercise, getting enough sleep, and taking breaks to relax. Talking to friends, family, or a counselor can also help. If stress feels overwhelming or lasts a long time, consider seeking professional support.";
+			if (msg.includes("sleep")) return "Good sleep improves mood, memory, and immunity. Maintain a regular sleep schedule—even on weekends. Limit caffeine after midday and avoid screens before bedtime. Create a quiet, dark, and cool sleep environment. If sleep problems persist, seek medical evaluation for conditions like insomnia or apnea.";
+			if (msg.includes("burn")) return "For minor burns, immediately cool the area under running water for 10 to 20 minutes. Avoid ice, which can damage tissue. Cover with a sterile, non-stick bandage and avoid popping blisters. Pain can be managed with over-the-counter medications. Seek medical help if the burn is larger than 3 inches or on sensitive areas.";
+			if (msg.includes("nosebleed first aid")) return "During a nosebleed, sit upright and lean slightly forward. Pinch your nostrils shut just below the bony bridge for 10–15 minutes without releasing. Avoid lying down or tilting your head back. Once bleeding stops, rest and avoid blowing your nose. If it recurs frequently, consult an ENT specialist.";
+			if (msg.includes("sprain")) return "Sprains usually occur in ankles, knees, or wrists and involve overstretched ligaments. Apply R.I.C.E: Rest the area, Ice it for 20 minutes every hour, Compress with a bandage, and Elevate above heart level. Avoid putting weight on it. If swelling or pain doesn’t improve in 2 days, seek medical evaluation.";
+			if (msg.includes("cut wound")) return "For minor cuts, rinse the wound under clean running water to remove debris. Use mild soap around the area, then apply pressure with a sterile cloth to stop bleeding. Cover with a clean bandage. Watch for signs of infection such as redness, pus, or increased pain. For deep cuts, stitches may be required.";
+			if (msg.includes("posture tips")) return "Good posture reduces back and neck pain, and improves breathing and focus. Sit with feet flat, knees at hip level, and your back supported. Adjust your screen to eye level and take regular breaks to stand or stretch. Ergonomic chairs or cushions can help, especially for desk work.";
+			if (msg.includes("eye strain")) return "Eye strain is common with extended screen use. Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds. Ensure proper lighting to reduce glare, and use blue light filters or glasses. Take screen-free breaks and blink often to prevent dry eyes.";
+			if (msg.includes("fitness motivation")) return "To stay motivated with fitness, set realistic and clear goals—like walking 30 minutes daily. Find an activity you enjoy, whether it's dancing, cycling, or strength training. Track your progress, celebrate milestones, and remember that consistency matters more than intensity. A workout buddy can boost accountability.";
+			if (msg.includes("healthy snacks")) return "Healthy snacking keeps your metabolism active and prevents overeating at meals. Choose options like fruit with nut butter, yogurt with seeds, hummus with veggies, or a boiled egg. Avoid high-sugar, high-salt packaged snacks. Always keep healthy options ready to curb cravings wisely.";
+			if (msg.includes("menstrual cramps")) return "Menstrual cramps are common and caused by uterine contractions. Applying a heating pad to the lower abdomen, staying hydrated, and doing light exercises can help ease the pain. Over-the-counter medications like ibuprofen can reduce discomfort. If cramps are severe or disrupt daily life, consult a gynecologist.";
+			if (msg.includes("irregular periods")) return "Irregular periods may result from stress, hormonal imbalances, thyroid issues, or conditions like PCOS. Track your cycle and lifestyle changes that may affect it. Maintain a healthy diet, manage stress, and exercise regularly. If irregularity continues for more than 3 cycles, seek medical advice.";
+			if (msg.includes("pcos")) return "Polycystic Ovary Syndrome (PCOS) affects hormone levels and can cause irregular periods, weight gain, and acne. A healthy diet, regular exercise, and weight management can improve symptoms. Some women may need medication for hormonal regulation. Regular follow-ups with a gynecologist are important.";
+			if (msg.includes("vaginal discharge")) return "Clear or white discharge is usually normal. However, if it's foul-smelling, greenish, or accompanied by itching, it may indicate infection. Avoid harsh soaps or douches, and wear breathable underwear. Consult a gynecologist if you notice unusual changes, as it could be bacterial or fungal vaginitis.";
+			if (msg.includes("breast pain")) return "Breast pain is often linked to hormonal changes before periods. Wearing a supportive bra, reducing caffeine intake, and using warm compresses can help. If the pain persists after menstruation or is localized with a lump, consult a doctor for a clinical breast exam or imaging.";
+			if (msg.includes("pregnancy nutrition")) return "During pregnancy, nutrition is critical for mother and baby. Include iron, calcium, folic acid, and protein-rich foods. Eat small, frequent meals and stay hydrated. Avoid alcohol, raw meats, and high-mercury fish. Take prenatal vitamins as prescribed and follow regular antenatal check-ups.";
+			if (msg.includes("postpartum depression")) return "Postpartum depression can occur weeks or months after childbirth. Symptoms include persistent sadness, lack of interest, fatigue, and bonding difficulty. It’s more than 'baby blues' and needs attention. Speak to a counselor or doctor. Support from family and therapy are key to recovery.";
+			if (msg.includes("osteoporosis prevention")) return "Women are at higher risk of osteoporosis, especially post-menopause. Ensure adequate calcium and vitamin D intake through diet or supplements. Weight-bearing exercises like walking or resistance training strengthen bones. Avoid smoking and limit alcohol. Discuss bone density testing with your doctor after age 50.";
+			if (msg.includes("urinary incontinence")) return "Urinary incontinence affects many women, especially after childbirth or menopause. Pelvic floor exercises like Kegels can strengthen muscles and improve control. Avoid caffeine and maintain a healthy weight. If symptoms persist or worsen, consult a urologist or gynecologist for tailored treatment.";
+			if (msg.includes("menopause symptoms")) return "Menopause can cause hot flashes, mood swings, and sleep problems. Dress in layers, avoid spicy foods, and try relaxation techniques. Some women benefit from hormone replacement therapy (HRT) or natural supplements. Always consult your doctor to decide what’s best for your symptoms and health profile.";
+			if (msg.includes("dust allergy")) return "Dust allergies are triggered by dust mites, mold, or particles in the air. Use hypoallergenic bedding, vacuum with HEPA filters, and keep humidity below 50%. Avoid carpets and clean surfaces regularly. Antihistamines or nasal sprays can reduce symptoms—consult a doctor if it interferes with daily life.";
+			if (msg.includes("food allergy")) return "Food allergies can cause hives, swelling, vomiting, or even anaphylaxis. Common triggers include nuts, shellfish, eggs, and dairy. Always read food labels and carry an epinephrine injector if prescribed. For suspected allergies, consult an allergist for testing and a personalized avoidance plan.";
+			if (msg.includes("pollen allergy")) return "Pollen allergies (hay fever) cause sneezing, itchy eyes, and runny nose, especially in spring. Keep windows closed during high pollen days, use air purifiers, and shower after coming indoors. Over-the-counter antihistamines or nasal corticosteroids help manage symptoms. Allergy shots may be needed for long-term control.";
+			if (msg.includes("skin allergy")) return "Skin allergies, like contact dermatitis or hives, may result from exposure to soaps, metals, or fabrics. Identify and avoid known irritants, and apply anti-itch creams or antihistamines. Keep the skin moisturized and wear breathable clothing. If the reaction spreads or worsens, see a dermatologist.";
+			if (msg.includes("pet allergy")) return "Pet allergies are caused by dander, saliva, or urine—not just fur. Bathe pets regularly, keep them out of bedrooms, and use HEPA air filters. Allergy medications can help, but severe cases may require allergy shots. Consider hypoallergenic breeds or pet-free zones in your home.";
+			if (msg.includes("mold allergy")) return "Mold thrives in damp places and can trigger sneezing, congestion, or asthma symptoms. Fix leaks, use dehumidifiers, and clean moldy areas with bleach solutions. Wear a mask when cleaning affected areas. If symptoms persist, an allergist can help diagnose and treat mold sensitivity effectively.";
+			if (msg.includes("insect allergy")) return "Stings or bites from bees, wasps, or ants can cause mild swelling to severe anaphylaxis. Avoid perfumes and bright clothing outdoors, and wear closed shoes in grassy areas. Keep an epinephrine auto-injector if prescribed. Seek emergency help immediately if there’s swelling of the face, lips, or difficulty breathing.";
+			if (msg.includes("drug allergy")) return "Drug allergies may cause rashes, swelling, breathing issues, or severe reactions like Stevens-Johnson syndrome. Common culprits include penicillin, sulfa drugs, or NSAIDs. Always inform healthcare providers about known allergies. In case of a reaction, stop the medication and seek immediate medical advice.";
+			if (msg.includes("latex allergy")) return "Latex allergy can cause itching, rash, or even anaphylaxis after contact with latex gloves, balloons, or medical devices. Use latex-free alternatives and wear a medical alert bracelet. Inform all caregivers and healthcare providers about your allergy to prevent exposure during procedures.";
+			if (msg.includes("cold allergy")) return "Cold urticaria is a rare allergy where exposure to cold causes hives, swelling, or even fainting. Dress warmly, especially when swimming or exposed to wind. Carry antihistamines or an epinephrine injector if advised. See a dermatologist or allergist for a confirmed diagnosis and prevention tips.";
+			if (msg.includes("headache smell sound light")) return "Headaches triggered by strong smells, loud noises, or bright lights are often migraines or sensory sensitivities. Avoid exposure to known triggers like perfumes, traffic noise, or flickering lights. Rest in a quiet, dark room and stay hydrated. Over-the-counter pain relievers can help, but persistent or severe headaches should be evaluated by a healthcare professional.";
+			if (msg.includes("headache")) return "Headaches can result from stress, dehydration, or tension. Try resting in a quiet, dark room and drink plenty of water. Over-the-counter pain relievers like acetaminophen or ibuprofen may help. If headaches become frequent or severe, consult a healthcare provider for further evaluation.";
+			if (msg.includes("neck pain")) return "Neck pain often stems from poor posture or muscle strain. Apply a warm compress, practice gentle neck stretches, and maintain ergonomic posture while working. Avoid heavy lifting and take breaks from screen time. Persistent or worsening pain should be assessed by a spine specialist.";
+			if (msg.includes("back pain")) return "Back pain can arise from muscle strain, poor posture, or injury. Use heat or cold packs, perform gentle stretches, and avoid prolonged sitting. Strengthening core muscles through exercise can prevent future pain. If pain is severe or radiates to legs, see a healthcare professional.";
+			if (msg.includes("joint pain")) return "Joint pain may be caused by arthritis, injury, or inflammation. Rest the affected joint, apply ice to reduce swelling, and take anti-inflammatory medications if recommended. Maintaining a healthy weight and low-impact exercise like swimming can improve joint health. Consult a doctor if pain persists or worsens.";
+			if (msg.includes("muscle pain")) return "Muscle pain often results from overuse, tension, or injury. Rest the muscle, apply ice or heat as needed, and perform gentle stretching. Staying hydrated and maintaining electrolyte balance is important. If pain is intense or accompanied by swelling, seek medical advice.";
+			if (msg.includes("abdominal pain")) return "Abdominal pain may be due to indigestion, infections, or other causes. Avoid heavy, spicy meals and stay hydrated. Use a heating pad on the abdomen for relief. If pain is severe, persistent, or accompanied by fever or vomiting, seek medical attention promptly.";
+			if (msg.includes("chest pain")) return "Chest pain can be serious and may indicate heart or lung issues. If pain is sharp, radiates to the arm or jaw, or is accompanied by shortness of breath or sweating, call emergency services immediately. For less severe pain, avoid heavy meals, stress, and consult your doctor.";
+			if (msg.includes("migraine pain")) return "Migraine pain is often throbbing and accompanied by nausea or light sensitivity. Rest in a dark, quiet room and stay hydrated. Avoid known triggers like certain foods, stress, or bright lights. Medications prescribed by a neurologist can help manage symptoms and prevent attacks.";
+			if (msg.includes("exercise tips")) return "Start with a warm-up to prepare your muscles and reduce injury risk. Choose exercises that combine cardio, strength training, and flexibility. Maintain proper form to avoid strain—consider consulting a trainer for guidance. Stay hydrated, listen to your body, and cool down with stretches after your workout. Consistency is key; aim for at least 150 minutes of moderate activity weekly.";
+			if (msg.includes("stretching tips")) return "Incorporate dynamic stretches before exercising to improve blood flow and reduce injury. After workouts, use static stretches to enhance flexibility and muscle recovery. Hold each stretch for 15-30 seconds without bouncing. Focus on major muscle groups like hamstrings, calves, shoulders, and back. Regular stretching improves mobility and reduces muscle soreness.";
+			if (msg.includes("strength training tips")) return "Start with lighter weights to master form and gradually increase resistance. Target all major muscle groups evenly for balanced strength. Allow muscles 48 hours to recover between sessions. Incorporate compound movements like squats and push-ups for efficiency. Proper breathing—exhale on exertion—optimizes performance and safety.";
+			if (msg.includes("cardio tips")) return "Choose cardio activities you enjoy like walking, cycling, swimming, or dancing to stay motivated. Gradually increase intensity and duration to improve endurance. Mix steady-state cardio with interval training for better results. Always warm up and cool down to prevent injury. Wear appropriate footwear to support your feet and joints.";
+			if (msg.includes("exercise safety")) return "Listen to your body and avoid pushing through sharp pain or extreme fatigue. Use proper equipment and workout in safe environments. Stay hydrated and fuel your body with balanced nutrition before and after exercise. If new to exercise or with medical conditions, consult a healthcare professional before starting. Rest and recovery are essential for progress.";
+			if (msg.includes("relaxation tips")) return "Practice deep breathing exercises by inhaling slowly through your nose and exhaling through your mouth to calm your nervous system. Try progressive muscle relaxation by tensing and then slowly releasing different muscle groups. Set aside time each day for mindfulness or meditation to reduce stress. Engage in activities you enjoy, like reading or listening to music, to help your mind unwind.";
+			if (msg.includes("stress relief")) return "Identify stress triggers and develop coping strategies like journaling or talking to a friend. Incorporate physical activity such as yoga or walking to release tension and boost mood. Maintain a balanced diet and get enough sleep to support mental well-being. Avoid excessive caffeine and screen time before bed to promote relaxation.";
+			if (msg.includes("sleep relaxation")) return "Create a calming bedtime routine with dim lights and relaxing activities such as reading or gentle stretching. Avoid electronic devices at least an hour before sleeping to reduce blue light exposure. Practice breathing exercises or guided meditation to prepare your mind for rest. Keep your sleep environment cool, quiet, and comfortable for better sleep quality.";
+			if (msg.includes("mental relaxation")) return "Engage in creative hobbies like painting, writing, or playing music to shift focus from stress. Practice visualization by imagining peaceful places or scenarios. Use aromatherapy with calming scents like lavender or chamomile to enhance relaxation. Take regular breaks during work to prevent burnout and refresh your mind.";
+			if (msg.includes("body relaxation")) return "Try gentle stretching or yoga poses to release muscle tension. Take warm baths with Epsom salts to soothe sore muscles and promote relaxation. Practice mindful body scanning to notice and release areas of tightness. Ensure good posture throughout the day to reduce physical stress and discomfort.";
+			if (msg.includes("menstrual pain")) return "Menstrual pain (dysmenorrhea) can be eased with a heating pad on your lower abdomen, gentle exercise, and over-the-counter pain relievers like ibuprofen. Maintain a balanced diet rich in magnesium and stay hydrated. Track your cycle to identify patterns. If pain is severe or worsening, consult a gynecologist for further evaluation.";
+			if (msg.includes("irregular periods")) return "Irregular periods can be caused by stress, hormonal imbalances, or underlying health conditions. Keep a menstrual diary to monitor cycle length and symptoms. Maintain a healthy weight and manage stress through relaxation techniques. Consult a gynecologist to rule out conditions like PCOS or thyroid issues.";
+			if (msg.includes("pregnancy care")) return "During pregnancy, attend regular prenatal check-ups to monitor your and your baby's health. Eat a balanced diet rich in folic acid, iron, and calcium. Avoid alcohol, smoking, and certain medications. Stay active with doctor-approved exercises and get plenty of rest. Report any unusual symptoms like bleeding or severe pain promptly.";
+			if (msg.includes("birth control")) return "There are various birth control methods including pills, IUDs, implants, and condoms. Choose the method that suits your lifestyle and health profile. Consult a gynecologist to discuss options and understand side effects. Use contraception consistently and correctly to prevent unintended pregnancy.";
+			if (msg.includes("menopause")) return "Menopause symptoms like hot flashes, mood swings, and sleep disturbances can be managed with lifestyle changes, such as regular exercise and a balanced diet. Avoid triggers like caffeine and spicy foods. Discuss hormone replacement therapy and other treatments with your gynecologist if symptoms interfere with daily life.";
+			if (msg.includes("pcos")) return "Polycystic Ovary Syndrome (PCOS) management includes regular exercise, a balanced diet low in refined carbs, and weight management. Monitor symptoms such as irregular periods, acne, and excessive hair growth. Follow up with your gynecologist for medication and hormonal treatments if necessary.";
+			if (msg.includes("uti")) return "Urinary Tract Infections (UTIs) cause burning during urination, urgency, and pelvic pain. Drink plenty of water and urinate frequently to flush bacteria. Avoid irritants like caffeine and harsh soaps. If symptoms persist or worsen, consult a gynecologist for antibiotics.";
+			if (msg.includes("breast health")) return "Perform regular breast self-exams to detect lumps or changes early. Schedule annual clinical exams and mammograms as recommended. Maintain a healthy weight, limit alcohol, and avoid smoking. Report any unusual lumps, nipple discharge, or persistent pain to your gynecologist.";
+			if (msg.includes("vaginal infection")) return "Vaginal infections may cause itching, discharge, and odor. Maintain good hygiene, avoid douching, and wear breathable cotton underwear. Use prescribed medications for bacterial or yeast infections. If symptoms recur frequently, consult your gynecologist for further evaluation.";
+			if (msg.includes("sexual health")) return "Practice safe sex by using condoms and getting regular screenings for sexually transmitted infections (STIs). Communicate openly with your partner about sexual health. If you experience pain, discomfort, or changes in libido, discuss these with your gynecologist for diagnosis and treatment.";
+      if (msg.includes("heavy periods")) return "Heavy menstrual bleeding can be caused by hormonal imbalances, fibroids, or other conditions. Keep track of your flow and soak times. Use sanitary products that suit heavy flow to avoid discomfort. Consult a gynecologist if bleeding is soaking through pads or tampons frequently or lasts more than 7 days.";
+			if (msg.includes("irregular periods")) return "Irregular periods may result from stress, thyroid issues, or PCOS. Maintain a healthy lifestyle with balanced nutrition and regular exercise. Track your menstrual cycles and any symptoms to identify patterns. Seek medical advice if irregularities persist for several months.";
+			if (msg.includes("spotting between periods")) return "Spotting between periods can be due to hormonal fluctuations, contraceptive use, or infections. Avoid douching and maintain proper hygiene. Note the timing and amount of spotting. Consult a gynecologist if spotting is frequent or accompanied by pain.";
+			if (msg.includes("missed period")) return "A missed period might indicate pregnancy, stress, or hormonal imbalance. Take a home pregnancy test if sexually active. Manage stress with relaxation techniques and ensure good nutrition. See a healthcare provider for further evaluation if periods continue to be missed.";
+			if (msg.includes("premenstrual syndrome") || msg.includes("pms")) return "Premenstrual Syndrome causes mood swings, bloating, and cramps before your period. Regular exercise and a balanced diet can help ease symptoms. Reduce caffeine and salt intake to minimize bloating. If symptoms interfere with daily life, consult your gynecologist.";
+			if (msg.includes("menstrual clots")) return "Passing small clots during periods is common, but large clots may indicate heavy bleeding or other issues. Stay hydrated and rest as needed. Track your bleeding pattern and clot size. Consult your doctor if clots are large, frequent, or accompanied by severe pain.";
+			if (msg.includes("painful periods")) return "Painful periods can be eased by applying heat, taking NSAIDs, and gentle physical activity. Avoid caffeine and practice relaxation techniques. Keep a symptom diary to discuss with your gynecologist. Seek medical advice if pain worsens or affects daily activities.";
+			if (msg.includes("late period")) return "A late period may result from stress, weight changes, or hormonal imbalances. Monitor your cycle and lifestyle factors. Maintain a healthy diet and regular sleep schedule. If periods remain late for several months, consult a healthcare provider.";
+			if (msg.includes("sore throat")) return "For a sore throat, gargle with warm salt water, stay hydrated, and use throat lozenges or sprays. Avoid irritants like smoke. If symptoms persist beyond a week or worsen, see a healthcare professional.";
+			if (msg.includes("nausea")) return "To ease nausea, try small, bland meals and stay hydrated with clear fluids. Avoid strong odors and heavy foods. Rest in a calm environment. If nausea is severe or prolonged, consult a doctor.";
+			if (msg.includes("constipation")) return "For constipation, increase fiber intake through fruits, vegetables, and whole grains. Drink plenty of water and exercise regularly. Over-the-counter laxatives can be used occasionally. If symptoms persist, see a healthcare provider.";
+			if (msg.includes("diarrhea")) return "During diarrhea, stay hydrated with oral rehydration solutions or clear fluids. Avoid fatty, spicy, or dairy foods temporarily. Rest and monitor symptoms. Seek medical help if diarrhea is severe or lasts more than two days.";
+			if (msg.includes("muscle cramps")) return "Muscle cramps can be relieved by gentle stretching, staying hydrated, and ensuring adequate electrolyte intake. Warm baths or massages may help. Frequent cramps should be evaluated by a healthcare professional.";
+			if (msg.includes("cold sore")) return "For cold sores, keep the area clean, avoid touching or picking at sores, and apply antiviral creams early. Use lip balm with SPF to prevent flare-ups. Consult a doctor if sores are severe or recurrent.";
+			if (msg.includes("dizziness")) return "If feeling dizzy, sit or lie down immediately to prevent falls. Stay hydrated and avoid sudden movements. If dizziness is frequent, severe, or accompanied by other symptoms, seek medical advice.";
+			if (msg.includes("allergic reaction")) return "For mild allergic reactions, avoid the allergen and take antihistamines as directed. Severe reactions require emergency medical attention, especially if breathing difficulty or swelling occurs.";
+			if (msg.includes("heartburn")) return "To reduce heartburn, avoid spicy or fatty foods, eat smaller meals, and avoid lying down right after eating. Elevate the head during sleep. Persistent heartburn should be evaluated by a healthcare provider.";
+			if (msg.includes("cold feet")) return "Cold feet can improve by wearing warm socks, keeping active, and improving circulation with foot baths or gentle massage. If persistent or painful, consult a healthcare professional.";
+			if (msg.includes("acne")) return "For acne, keep your face clean by washing twice daily with a gentle cleanser. Avoid picking or squeezing pimples. Use non-comedogenic skincare products. If acne is severe or persistent, consult a dermatologist.";
+			if (msg.includes("allergic rhinitis")) return "Allergic rhinitis symptoms can be eased by avoiding allergens, using saline nasal sprays, and taking antihistamines. Keep windows closed during high pollen times and consider air purifiers indoors.";
+			if (msg.includes("athlete's foot")) return "To treat athlete's foot, keep feet clean and dry, change socks daily, and use antifungal creams as directed. Avoid walking barefoot in public places. If it doesn’t improve, see a healthcare provider.";
+			if (msg.includes("blurred vision")) return "Blurred vision may indicate eye strain, dryness, or more serious issues. Rest your eyes frequently and maintain good lighting. If blurred vision persists or worsens, seek prompt medical evaluation.";
+			if (msg.includes("cold")) return "For a common cold, rest, stay hydrated, and use over-the-counter cold remedies for symptoms. Warm fluids and steam inhalation can ease congestion. Consult a doctor if symptoms worsen or last more than 10 days.";
+			if (msg.includes("constipation during pregnancy")) return "Pregnant women with constipation should increase fiber and fluid intake, engage in gentle exercise, and consult their doctor before using any laxatives.";
+			if (msg.includes("dehydration")) return "To prevent dehydration, drink plenty of fluids, especially water, and avoid excessive caffeine or alcohol. Seek medical help if symptoms include dizziness, dry mouth, or confusion.";
+			if (msg.includes("ear pain")) return "Ear pain can result from infections or pressure changes. Applying a warm compress and taking pain relievers may help. If pain is severe or accompanied by discharge or hearing loss, see a healthcare professional.";
+			if (msg.includes("fatigue")) return "Fatigue can improve with adequate sleep, balanced nutrition, regular exercise, and stress management. If fatigue is persistent or unexplained, consult a healthcare provider for further evaluation.";
+			if (msg.includes("feeling cold")) return "Feeling cold might be due to low body temperature, anemia, or circulation issues. Dress warmly, stay active, and eat balanced meals. Persistent symptoms warrant medical evaluation.";
+			if (msg.includes("neuropathy")) return "Neuropathy causes numbness, tingling, or pain usually in the hands and feet. Managing blood sugar, avoiding alcohol, and certain medications can help. Consult a neurologist for diagnosis and treatment options.";
+			if (msg.includes("nerve pain")) return "Nerve pain can be managed with medications like anticonvulsants or antidepressants, physical therapy, and lifestyle changes. Seek medical advice if pain is severe or persistent.";
+			if (msg.includes("multiple sclerosis")) return "Multiple sclerosis symptoms vary but often include fatigue, numbness, and difficulty walking. Early diagnosis and treatment by a neurologist can help manage symptoms and slow progression.";
+			if (msg.includes("stroke symptoms")) return "Stroke symptoms include sudden weakness, speech difficulty, or facial drooping. Call emergency services immediately if you or someone else shows these signs.";
+			if (msg.includes("tremors")) return "Tremors may be caused by neurological disorders like Parkinson's disease or essential tremor. Consult a neurologist for diagnosis and treatment options.";
+			if (msg.includes("seizures")) return "Seizures require prompt medical evaluation. Avoid triggers, take prescribed medications regularly, and seek emergency help if a seizure lasts more than 5 minutes.";
+			if (msg.includes("brain fog")) return "Brain fog can result from stress, fatigue, or neurological issues. Improve sleep, reduce stress, and consult a healthcare provider if symptoms persist or worsen.";
+			if (msg.includes("neurological disorder")) return "Neurological disorders affect the nervous system and require specialized diagnosis. Maintain a healthy lifestyle and consult a neurologist if you experience persistent neurological symptoms.";
+			if (msg.includes("memory loss")) return "Memory loss can be due to aging, stress, or neurological conditions. Keep mentally active, maintain a healthy diet, and see a healthcare provider if memory problems interfere with daily life.";
+			if (msg.includes("nerve damage")) return "Nerve damage symptoms include numbness, weakness, or pain. Early diagnosis and treatment are important to prevent worsening. Consult a neurologist for appropriate care.";
+			if (msg.includes("migraine")) return "Migraines can be triggered by stress, certain foods, or hormonal changes. Rest in a dark, quiet room, stay hydrated, and consider over-the-counter pain relievers. Consult a healthcare provider if migraines are frequent or severe.";
+			if (msg.includes("diabetes")) return "Manage diabetes by monitoring blood sugar, eating a balanced diet, exercising regularly, and taking medications as prescribed. Regular check-ups are important to prevent complications.";
+			if (msg.includes("hypertension")) return "To control hypertension, reduce salt intake, maintain a healthy weight, exercise regularly, and manage stress. Follow your doctor's advice and take prescribed medications.";
+			if (msg.includes("depression")) return "Depression symptoms include persistent sadness, loss of interest, and fatigue. Seek support from mental health professionals, practice self-care, and consider therapy or medication if needed.";
+			if (msg.includes("asthma")) return "Manage asthma by avoiding triggers, using prescribed inhalers, and monitoring symptoms. Have an action plan ready and seek emergency care if breathing becomes difficult.";
+			if (msg.includes("eczema")) return "Eczema can be managed by moisturizing regularly, avoiding irritants, and using topical treatments as directed. Consult a dermatologist for persistent or severe cases.";
+			if (msg.includes("hypothyroidism")) return "Hypothyroidism symptoms include fatigue, weight gain, and cold intolerance. Treatment involves daily thyroid hormone replacement under medical supervision.";
+			if (msg.includes("anemia")) return "Anemia causes fatigue and weakness due to low red blood cells. Increase iron-rich foods, and consult a healthcare provider for diagnosis and treatment.";
+			if (msg.includes("osteoporosis")) return "Prevent osteoporosis with adequate calcium and vitamin D intake, regular weight-bearing exercise, and lifestyle modifications. Bone density testing and treatment may be necessary.";
+			if (msg.includes("allergic reaction")) return "For mild allergic reactions, avoid the allergen and take antihistamines. Seek emergency care for severe symptoms like difficulty breathing or swelling.";
+      if (msg.includes("acne")) return "Symptoms: pimples, blackheads, oily skin. Remedy: keep skin clean, avoid oily products, use acne treatments as advised.";
+      if (msg.includes("psoriasis")) return "Symptoms: red, scaly patches on skin, itching. Remedy: moisturize regularly, use prescribed topical treatments, avoid triggers.";
+      if (msg.includes("eczema")) return "Symptoms: dry, itchy, inflamed skin patches. Remedy: moisturize often, avoid irritants, use corticosteroid creams.";
+      if (msg.includes("rosacea")) return "Symptoms: facial redness, visible blood vessels, bumps. Remedy: avoid triggers like spicy foods, sun protection, consult dermatologist.";
+      if (msg.includes("dermatitis")) return "Symptoms: red, itchy rash, swelling. Remedy: avoid allergens/irritants, moisturize, use prescribed creams.";
+      if (msg.includes("measles")) return "Symptoms: high fever, cough, runny nose, red eyes, rash. Remedy: rest, hydration, vitamin A supplements, seek medical care.";
+      if (msg.includes("mumps")) return "Symptoms: swollen salivary glands, fever, headache, muscle aches. Remedy: rest, fluids, pain relievers.";
+      if (msg.includes("herpes")) return "Symptoms: painful blisters or sores, itching. Remedy: antiviral medication, keep sores clean and dry.";
+      if (msg.includes("tuberculosis") || msg.includes("tb")) return "Symptoms: persistent cough, weight loss, fever, night sweats. Remedy: complete prescribed antibiotics course, rest, and nutrition.";
+      if (msg.includes("strep throat")) return "Symptoms: sore throat, fever, swollen lymph nodes. Remedy: antibiotics as prescribed, rest, fluids.";
+      if (msg.includes("urinary tract infection") || msg.includes("uti")) return "Symptoms: burning urination, frequent urge to pee, cloudy urine. Remedy: drink plenty of water, complete antibiotics course.";
+      if (msg.includes("bacterial pneumonia")) return "Symptoms: cough with mucus, fever, shortness of breath. Remedy: antibiotics, rest, hydration.";
+      if (msg.includes("impetigo")) return "Symptoms: red sores, itching, oozing blisters. Remedy: topical or oral antibiotics, keep area clean.";
+      if (msg.includes("hypertension") || msg.includes("high blood pressure")) return "Symptoms: often no symptoms, headache, dizziness. Remedy: reduce salt intake, exercise regularly, take prescribed meds.";
+      if (msg.includes("heart attack")) return "Symptoms: chest pain, shortness of breath, sweating, nausea. Remedy: call emergency services immediately, rest, follow medical advice.";
+      if (msg.includes("angina")) return "Symptoms: chest discomfort or pain during exertion. Remedy: rest, avoid triggers, take prescribed medications.";
+      if (msg.includes("arrhythmia")) return "Symptoms: irregular heartbeat, dizziness, shortness of breath. Remedy: medical evaluation, medications, sometimes procedures.";
+      if (msg.includes("heart failure")) return "Symptoms: shortness of breath, swelling in legs, fatigue. Remedy: medication, lifestyle changes, regular monitoring.";
+      if (msg.includes("allergic rhinitis")) return "Symptoms: sneezing, itchy eyes, runny nose, congestion. Remedy: avoid allergens, use antihistamines, nasal sprays.";
+      if (msg.includes("food allergy")) return "Symptoms: hives, swelling, stomach pain, difficulty breathing. Remedy: avoid trigger foods, carry epinephrine if prescribed, seek emergency help if severe.";
+      if (msg.includes("eczema")) return "Symptoms: dry, itchy, inflamed skin patches. Remedy: moisturize regularly, avoid irritants, use prescribed creams.";
+      if (msg.includes("asthma")) return "Symptoms: wheezing, coughing, shortness of breath. Remedy: avoid triggers, use inhalers, follow asthma action plan.";
+      if (msg.includes("urticaria") || msg.includes("hives")) return "Symptoms: raised, itchy red welts on skin. Remedy: antihistamines, avoid triggers, cool compresses.";
+      if (msg.includes("dust allergy")) return "Symptoms: sneezing, runny nose, itchy eyes, coughing. Remedy: keep environment clean, use air purifiers, take antihistamines. Consult a doctor if symptoms persist or worsen.";
+      if (msg.includes("scent allergy") || msg.includes("fragrance allergy")) return "Symptoms: sneezing, headache, nasal congestion, skin irritation. Remedy: avoid scented products, use fragrance-free items, take antihistamines. Consult a doctor if symptoms persist or worsen.";
+      if (msg.includes("migraine")) return "Symptoms: severe headache, nausea, sensitivity to light and sound. Remedy: rest in quiet dark room, stay hydrated, take prescribed meds. Consult a doctor if frequent or severe.";
+      if (msg.includes("epilepsy")) return "Symptoms: seizures, loss of awareness, confusion. Remedy: take prescribed anti-seizure medications, avoid triggers, ensure safety during episodes. Consult a neurologist regularly.";
+      if (msg.includes("stroke")) return "Symptoms: sudden weakness, numbness, trouble speaking, vision problems. Remedy: call emergency services immediately, seek urgent medical care.";
+      if (msg.includes("multiple sclerosis") || msg.includes("ms")) return "Symptoms: muscle weakness, coordination problems, vision issues. Remedy: follow prescribed treatment, physical therapy, regular checkups. Consult a neurologist.";
+      if (msg.includes("parkinson")) return "Symptoms: tremors, stiffness, slow movement. Remedy: medication, physical therapy, lifestyle changes. Consult a neurologist.";
+      if (msg.includes("alzheimers") || msg.includes("alzheimer's disease")) return "Symptoms: memory loss, confusion, difficulty completing tasks. Remedy: cognitive therapy, medications, supportive care. Consult a neurologist.";
+      if (msg.includes("migraine")) return "Symptoms: severe headache, nausea, light/sound sensitivity. Remedy: rest, hydration, prescribed meds. Consult doctor if frequent.";
+      if (msg.includes("bell's palsy")) return "Symptoms: sudden facial muscle weakness, drooping, difficulty closing eye. Remedy: physical therapy, corticosteroids. Consult doctor early.";
+      if (msg.includes("neuropathy")) return "Symptoms: numbness, tingling, pain in hands or feet. Remedy: control underlying conditions, pain management. Consult neurologist.";
+      if (msg.includes("brain tumor")) return "Symptoms: headaches, seizures, vision changes, cognitive issues. Remedy: medical evaluation, surgery, or treatment as advised. Consult neurologist urgently.";
+      if (msg.includes("meningitis")) return "Symptoms: fever, headache, stiff neck, confusion. Remedy: urgent medical care, antibiotics or antivirals. Seek immediate doctor consultation.";
+      if (msg.includes("cancer")) return "Symptoms: unexplained weight loss, lumps, fatigue, pain. Remedy: early diagnosis, follow medical treatment plans, maintain healthy lifestyle. Consult oncologist promptly.";
+      if (msg.includes("aids") || msg.includes("hiv")) return "Symptoms: persistent fever, weight loss, fatigue, swollen lymph nodes. Remedy: antiretroviral therapy, maintain healthy lifestyle, avoid infections. Consult infectious disease specialist regularly.";
+      if (msg.includes("breast cancer")) return "Symptoms: lump in breast, change in breast shape, skin dimpling. Remedy: early screening, surgery, chemotherapy, radiation. Consult oncologist.";
+      if (msg.includes("lung cancer")) return "Symptoms: persistent cough, chest pain, shortness of breath, weight loss. Remedy: quit smoking, chemotherapy, radiation, surgery. Consult oncologist.";
+      if (msg.includes("prostate cancer")) return "Symptoms: difficulty urinating, pelvic pain, blood in urine. Remedy: regular checkups, medication, surgery, radiation. Consult urologist.";
+      if (msg.includes("colorectal cancer")) return "Symptoms: blood in stool, abdominal pain, change in bowel habits. Remedy: colonoscopy screenings, surgery, chemotherapy. Consult oncologist.";
+      if (msg.includes("skin cancer")) return "Symptoms: new or changing moles, skin sores that don’t heal. Remedy: sun protection, surgical removal, medication. Consult dermatologist.";
+      if (msg.includes("leukemia")) return "Symptoms: fatigue, frequent infections, easy bruising or bleeding. Remedy: chemotherapy, bone marrow transplant. Consult hematologist.";
+      if (msg.includes("benign tumor")) return "Symptoms: localized lump or swelling, usually painless. Remedy: monitoring or surgical removal if necessary. Consult a doctor for diagnosis.";
+      if (msg.includes("malignant tumor")) return "Symptoms: persistent growth, pain, weight loss, fatigue. Remedy: medical evaluation, surgery, chemotherapy, radiation. Consult oncologist urgently.";
+      if (msg.includes("brain tumor")) return "Symptoms: headaches, seizures, vision or speech problems, balance issues. Remedy: medical assessment, surgery, radiation, chemotherapy. Consult neurologist.";
+      if (msg.includes("lipoma")) return "Symptoms: soft, movable lump under the skin, usually painless. Remedy: monitoring or surgical removal if bothersome. Consult doctor.";
+      if (msg.includes("leg pain")) return "Leg pain can result from various causes such as muscle strain, nerve compression, or poor circulation. If the pain is sharp, persistent, or accompanied by swelling, redness, or numbness, it may indicate a more serious issue like a blood clot or sciatica. Rest, gentle stretching, and over-the-counter pain relievers may help with mild discomfort. However, if the pain doesn't improve or worsens, it's important to consult a doctor for a proper diagnosis.";
+      if (msg.includes("fibroma")) return "Symptoms: firm, non-painful lump, often in connective tissue. Remedy: monitoring or surgery if symptomatic. Consult doctor.";
+      if (msg.includes("toothache")) return "Symptoms: sharp or throbbing pain in a tooth. Remedy: maintain oral hygiene, rinse with warm salt water, use pain relievers. Consult a dentist if pain persists.";
+      if (msg.includes("gum disease") || msg.includes("gingivitis")) return "Symptoms: red, swollen, bleeding gums. Remedy: brush and floss regularly, use antiseptic mouthwash. Consult a dentist for treatment.";
+      if (msg.includes("tooth decay") || msg.includes("cavity")) return "Symptoms: tooth sensitivity, visible holes or pits in teeth. Remedy: reduce sugary foods, maintain oral hygiene, get dental fillings. Consult a dentist.";
+      if (msg.includes("oral thrush")) return "Symptoms: white patches inside the mouth, soreness. Remedy: antifungal medication, good oral hygiene. Consult a doctor or dentist.";
+      if (msg.includes("bad breath") || msg.includes("halitosis")) return "Symptoms: persistent unpleasant mouth odor. Remedy: brush and floss regularly, stay hydrated, clean tongue. Consult dentist if persistent.";
+      if (msg.includes("mouth ulcer") || msg.includes("canker sore")) return "Symptoms: painful sores inside the mouth, redness. Remedy: avoid spicy/acidic foods, use saltwater rinses, topical gels for relief. Consult a doctor if ulcers persist over 2 weeks.";
+      if (msg.includes("ulcer")) return "Symptoms: burning stomach pain, nausea, bloating, indigestion. Remedy: avoid spicy/acidic foods, eat smaller meals, reduce stress, avoid NSAIDs. Consult a doctor for diagnosis and treatment.";
+      if (msg.includes("conjunctivitis") || msg.includes("pink eye")) return "Symptoms: red, itchy, watery eyes, discharge. Remedy: avoid touching eyes, use clean compress, prescribed eye drops. Consult an eye doctor if symptoms persist.";
+      if (msg.includes("dry eyes")) return "Symptoms: burning, itching, dryness, blurry vision. Remedy: use artificial tears, take breaks from screens, stay hydrated. Consult an eye specialist if severe.";
+      if (msg.includes("glaucoma")) return "Symptoms: gradual loss of peripheral vision, eye pain, halos around lights. Remedy: prescribed eye drops, regular monitoring. Consult ophthalmologist urgently.";
+      if (msg.includes("cataract")) return "Symptoms: blurry vision, glare, faded colors. Remedy: surgery to replace lens is effective. Consult an eye surgeon.";
+      if (msg.includes("eye") && (msg.includes("irritation"))) return "Eye irritation can cause redness, itching, burning, or watery eyes and may result from allergies, dryness, or infections. Avoid rubbing your eyes and rinse them with clean water or artificial tears. If symptoms persist or worsen, see a doctor.";
+      if (msg.includes("weight")) return "To lose weight safely, focus on eating a balanced diet with plenty of fruits, vegetables, whole grains, and lean proteins. Combine this with regular physical activity like walking, swimming, or cycling. Avoid crash diets or extreme restrictions, as they can harm your health. Stay hydrated, get enough sleep, and be patient—healthy weight loss usually happens gradually. If needed, consult a healthcare professional for personalized advice.";
+      if (msg.includes("macular degeneration")) return "Symptoms: blurred or reduced central vision. Remedy: nutritional supplements, protect eyes from UV, regular eye exams. Consult ophthalmologist.";
+      if (msg.includes("retinal detachment")) return "Symptoms: sudden flashes of light, floaters, shadow over vision. Remedy: emergency medical treatment needed. Consult eye specialist immediately.";
+      if (msg.includes("blepharitis")) return "Symptoms: red, swollen eyelids, crusty eyelashes. Remedy: eyelid hygiene, warm compresses, prescribed medications. Consult eye doctor.";
+      if (msg.includes("color blindness")) return "Symptoms: difficulty distinguishing colors. Remedy: no cure, use color filters or assistive tools. Consult eye specialist for diagnosis.";
+      if (msg.includes("calcium deficiency") || msg.includes("hypocalcemia")) return "Symptoms: muscle cramps, brittle nails, numbness or tingling in fingers, fatigue. Remedy: consume calcium-rich foods, supplements if needed. Consult doctor for proper diagnosis and treatment.";
+      if (msg.includes("pregnancy")) return "Symptoms: missed period, nausea, breast tenderness, fatigue. Remedy: maintain healthy diet, prenatal vitamins, regular checkups. Consult obstetrician for prenatal care and guidance.";
+      if (msg.includes("stomach pain")) return "If you have only stomach pain, start by resting and drinking warm water or herbal teas to relax your digestive system. Eat light, bland foods like rice, bananas, or toast, and avoid spicy, greasy, or dairy-heavy meals. Sometimes pain comes from gas, indigestion, or mild infections, which usually pass on their own. However, if the pain is severe, keeps getting worse, or is focused in one area (like the lower right side), you should see a doctor to rule out something more serious like appendicitis or an infection.";
+      if (msg.includes("headache") && (msg.includes("prescription") || msg.includes("medicine") || msg.includes("medicines"))) return "Common headache medicines: paracetamol, ibuprofen, aspirin. Always follow dosage instructions and consult a doctor.";
+      if (msg.includes("fever") && (msg.includes("prescription") || msg.includes("medicine") || msg.includes("medicines"))) return "Common fever medicines: paracetamol, ibuprofen. Always follow dosage instructions and consult a doctor.";
+      if (msg.includes("common cold") && (msg.includes("prescription") || msg.includes("medicine") || msg.includes("medicines"))) return "Common cold medicines: decongestants, antihistamines, pain relievers like paracetamol or ibuprofen. Consult a doctor if symptoms worsen.";
+      if (msg.includes("stomach ache") || (msg.includes("prescription") || msg.includes("medicine") || msg.includes("medicines"))) return "Common stomach ache medicines: antacids, proton pump inhibitors, simethicone. Consult a doctor for persistent pain.";
+      if (msg.includes("bp") || msg.includes("blood pressure")) return "To control blood pressure, focus on a healthy lifestyle: eat a balanced diet low in salt, saturated fats, and processed foods, and rich in fruits, vegetables, and whole grains. Regular physical activity like walking, swimming, or cycling helps lower blood pressure. Reducing stress, limiting alcohol, avoiding tobacco, and maintaining a healthy weight are also key. If lifestyle changes aren't enough, your doctor may prescribe medication to help manage it effectively.";
+      if (msg.includes("blood sugar") || msg.includes("diabetes") || msg.includes("sugar")) return "To control blood sugar, eat a balanced diet rich in fiber, whole grains, lean proteins, and non-starchy vegetables, while limiting sugary foods and refined carbs. Regular exercise helps your body use insulin more effectively. Monitor your blood sugar levels consistently and manage stress, as it can raise glucose. If you're diabetic, take medications or insulin as prescribed by your doctor and follow a routine that supports stable blood sugar throughout the day.";
+      if (msg.includes("high bp") || msg.includes("high blood pressure")) return "If you have high blood pressure, start by reducing salt intake, eating a balanced diet rich in fruits and vegetables, exercising regularly, and managing stress. Limiting alcohol, quitting smoking, and maintaining a healthy weight are also important. If lifestyle changes aren’t enough, a doctor may prescribe medications like ACE inhibitors or diuretics. It's important to monitor your blood pressure regularly and follow up with your healthcare provider.";
+      if (msg.includes("low bp") || msg.includes("low blood pressure")) return "For low blood pressure, it's important to stay hydrated by drinking plenty of fluids and increasing salt intake slightly, if advised by a doctor. Eating small, frequent meals and avoiding sudden position changes can help prevent dizziness. Wearing compression stockings may also improve circulation. If symptoms like fainting or fatigue persist, medical evaluation is necessary to rule out underlying causes.";
+      if ((msg.includes("weight") || msg.includes("mass"))&& (msg.includes("gain") || msg.includes("increase") || msg.includes("gaining"))) return "For low blood pressure, it's important to stay hydrated by drinking plenty of fluids and increasing salt intake slightly, if advised by a doctor. Eating small, frequent meals and avoiding sudden position changes can help prevent dizziness. Wearing compression stockings may also improve circulation. If symptoms like fainting or fatigue persist, medical evaluation is necessary to rule out underlying causes.";
+      if (msg.includes("leg pain")) return "Leg pain can be caused by muscle strain, poor circulation, nerve issues, or overuse. To relieve it, try resting your legs, applying ice or heat depending on the cause, and gently stretching the muscles. Staying active with low-impact exercises like walking or swimming can improve circulation and reduce stiffness. If the pain is severe, persistent, or accompanied by swelling or numbness, it's important to see a doctor to rule out more serious conditions like a blood clot or nerve compression.";
+      if (msg.includes("eye") && (msg.includes("strain") || msg.includes("stress"))) return "Eye strain or stress causes soreness, dryness, headaches, and blurred vision, especially after long periods of reading or screen use. To relieve it, take regular breaks using the 20-20-20 rule (every 20 minutes, look at something 20 feet away for 20 seconds), adjust your screen brightness, blink often, and make sure your lighting is comfortable.";
+      if (msg.includes("cramp") || msg.includes("cramps")) return "Cramps are sudden, painful muscle contractions often caused by dehydration, fatigue, or mineral imbalances. To relieve them, gently stretch and massage the muscle. Staying hydrated and eating foods rich in potassium and magnesium can help prevent cramps. Regular exercise and proper warm-up also reduce the risk.";
+      if ((msg.includes("fire") || msg.includes("thermal") || msg.includes("skin") || msg.includes("heat")) && (msg.includes("burn") || msg.includes("burns"))) return "It cause skin damage that can range from mild redness to severe tissue injury. For minor burns, cool the area with running water for 10–15 minutes, avoid ice, and cover with a clean, non-stick bandage. Do not apply creams or break blisters. Seek medical help for severe, large, or blistering burns.";
+   
+
+      return "I'm sorry, I need more info to assist you. Can you describe your symptoms?";
+    };
+
+    sendBtn.addEventListener('click', () => {
+      const msg = userInput.value.trim();
+      if (!msg) return;
+
+      chatMessages.innerHTML += `
+        <div class="chat-message user">
+          <p><strong>You:</strong> ${msg}</p>
+          <img src="download.jpg" alt="User" class="avatar"/>
+        </div>`;
+
+      const reply = getBotReply(msg);
+
+      chatMessages.innerHTML += `
+        <div class="chat-message bot">
+          <img src="dr-emily-profile.jpg" alt="Dr. Emily" class="avatar"/>
+          <p><strong>Dr. Emily:</strong> ${reply}</p>
+        </div>`;
+
+      userInput.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    userInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>

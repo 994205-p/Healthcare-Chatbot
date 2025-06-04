@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eye Exercise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: #e872a5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 20px 0;
+      color: #00796b;
+    }
+
+    #exerciseContainer {
+      position: relative;
+      width: 90vw;
+      height: 70vh;
+      background: #eab7cd;
+      border: 2px solid #00796b;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .ball {
+      width: 40px;
+      height: 40px;
+      background: #00796b;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 25px;
+      background: #00796b;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #004d40;
+    }
+
+    .path-guide {
+      position: absolute;
+      border: 1px dashed #e5bacd;
+      pointer-events: none;
+      display: none; /* hidden by default */
+    }
+
+    .circle-path {
+      border-radius: 50%;
+    }
+
+    .rectangle-path {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Eye Movement Exercise</h1>
+  <div id="exerciseContainer">
+    <div class="ball" id="ball"></div>
+    <div id="circleGuide" class="path-guide circle-path"></div>
+    <div id="rectangleGuide" class="path-guide rectangle-path"></div>
+  </div>
+  <div class="controls">
+    <button id="startBtn" onclick="toggleExercise()">Start</button>
+    <button id="backBtn" onclick="history.back()">Back</button>
+  </div>
+
+  <script>
+    const ball = document.getElementById('ball');
+    const container = document.getElementById('exerciseContainer');
+    const startBtn = document.getElementById('startBtn');
+    const circleGuide = document.getElementById('circleGuide');
+    const rectangleGuide = document.getElementById('rectangleGuide');
+
+    const durationPerMove = 3000; // 3 seconds per move for smooth slow motion
+    let isRunning = false;
+
+    // Helper to move ball smoothly
+    const moveBall = (x, y, duration) => {
+      return new Promise(resolve => {
+        const startX = ball.offsetLeft;
+        const startY = ball.offsetTop;
+        const dx = x - startX;
+        const dy = y - startY;
+        const startTime = performance.now();
+
+        function animate(time) {
+          if (!isRunning) return resolve(); // stop immediately if stopped
+          const elapsed = time - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          ball.style.left = `${startX + dx * progress}px`;
+          ball.style.top = `${startY + dy * progress}px`;
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            resolve();
+          }
+        }
+        requestAnimationFrame(animate);
+      });
+    };
+
+    async function runExercise() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const r = Math.min(w, h) / 2 - 40;
+
+      const left = 10, right = w - 50;
+      const top = 10, bottom = h - 50;
+
+      // Prepare circle guide
+      circleGuide.style.width = `${r * 2}px`;
+      circleGuide.style.height = `${r * 2}px`;
+      circleGuide.style.left = `${centerX - r}px`;
+      circleGuide.style.top = `${centerY - r}px`;
+
+      // Reset ball to center at start
+      ball.style.left = `${centerX - 20}px`;
+      ball.style.top = `${centerY - 20}px`;
+
+      // Horizontal (5 times)
+      for (let i = 0; i < 5 && isRunning; i++) {
+        await moveBall(left, centerY - 20, durationPerMove);
+        await moveBall(right, centerY - 20, durationPerMove);
+      }
+
+      // Vertical (5 times)
+      for (let i = 0; i < 5 && isRunning; i++) {
+        await moveBall(centerX - 20, top, durationPerMove);
+        await moveBall(centerX - 20, bottom, durationPerMove);
+      }
+
+      // Diagonal Top-Left to Bottom-Right (5 times)
+      for (let i = 0; i < 5 && isRunning; i++) {
+        await moveBall(left, top, durationPerMove);
+        await moveBall(right, bottom, durationPerMove);
+      }
+
+      // Diagonal Top-Right to Bottom-Left (5 times)
+      for (let i = 0; i < 5 && isRunning; i++) {
+        await moveBall(right, top, durationPerMove);
+        await moveBall(left, bottom, durationPerMove);
+      }
+
+      // Circle (5 rotations)
+      circleGuide.style.display = 'block';
+      const circleSteps = 120; // steps per rotation
+
+      for (let i = 0; i < 5 && isRunning; i++) {
+        for (let j = 0; j < circleSteps && isRunning; j++) {
+          const angle = (j / circleSteps) * 2 * Math.PI;
+          const x = centerX + r * Math.cos(angle) - 20;
+          const y = centerY + r * Math.sin(angle) - 20;
+          await moveBall(x, y, durationPerMove / circleSteps);
+        }
+      }
+      circleGuide.style.display = 'none';
+
+      // Rectangle (5 loops)
+      rectangleGuide.style.display = 'block';
+      for (let i = 0; i < 5 && isRunning; i++) {
+        await moveBall(left, top, durationPerMove);
+        await moveBall(right, top, durationPerMove);
+        await moveBall(right, bottom, durationPerMove);
+        await moveBall(left, bottom, durationPerMove);
+      }
+      rectangleGuide.style.display = 'none';
+
+      // Reset ball to center when finished
+      ball.style.left = `${centerX - 20}px`;
+      ball.style.top = `${centerY - 20}px`;
+
+      isRunning = false;
+      startBtn.textContent = 'Start';
+    }
+
+    function toggleExercise() {
+      if (isRunning) {
+        isRunning = false;
+        startBtn.textContent = 'Start';
+      } else {
+        isRunning = true;
+        startBtn.textContent = 'Stop';
+        runExercise();
+      }
+    }
+  </script>
+</body>
+</html>

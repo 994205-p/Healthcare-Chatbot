@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Health Insights</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+
+    .left, .right {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .left {
+      background: #f9b2c9;
+    }
+
+    .right {
+      background: #f9b2c9;
+      border-left: 2px solid #d1d5db;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 350px;
+      background: #e594ad;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1e293b;
+    }
+
+    .avatar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+
+    .avatar img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid #3b82f6;
+    }
+
+    label {
+      margin-top: 10px;
+      display: block;
+      font-weight: 500;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2563eb;
+    }
+
+    .result-box {
+      width: 100%;
+      max-width: 800px;
+      background: #e0869f;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.4s ease-in;
+      display: flex;
+      flex-direction: row;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .insight-text, .chart-area {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .insight-text {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .result-box {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .left, .right {
+        width: 100%;
+        border-left: none;
+        border-top: 2px solid #d1d5db;
+      }
+    }
+
+    .chart-card {
+      background: #f9b6d7;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+      animation: fadeInCute 0.5s ease;
+    }
+
+    .chart-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeInCute {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h3 {
+      text-align: center;
+    }
+
+    .waving-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 3px solid #3b82f6;
+      animation: wave 2s infinite;
+    }
+
+    @keyframes wave {
+      0% { transform: rotate(0deg); }
+      10% { transform: rotate(15deg); }
+      20% { transform: rotate(-10deg); }
+      30% { transform: rotate(10deg); }
+      40% { transform: rotate(-5deg); }
+      50% { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT SIDE: INPUT FORM -->
+  <div class="left">
+    <div class="form-box">
+      <div class="avatar">
+        <img src="cute nurse avator.png" alt="Cute Nurse Avatar" class="waving-avatar" />
+      </div>
+
+      <h2>Enter Your Details</h2>
+      <label>💉 Sugar Level (mg/dL):</label>
+      <input type="number" id="sugar" placeholder="e.g. 120" />
+
+      <label>⚖️ Weight (kg):</label>
+      <input type="number" id="weight" placeholder="e.g. 65" />
+
+      <label>📏 Height (cm):</label>
+      <input type="number" id="height" placeholder="e.g. 170" />
+
+      <button onclick="analyzeHealth()">Get Insights</button>
+      <button id="backButton" onclick="goBack()" style="margin-top:10px; background-color:#3f9016;" onmouseover="this.style.backgroundColor='#2c6e10';" onmouseout="this.style.backgroundColor='#3f9016';">⬅️ Back</button>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE: HEALTH INSIGHTS -->
+  <div class="right">
+    <div class="result-box" id="outputBox" style="display: none;">
+      <h3>🩺 Health Insights</h3>
+      <div class="result-text" id="outputText"></div>
+    </div>
+  </div>
+
+<script>
+  let bmiChart;
+  let sugarChart;
+
+  function analyzeHealth() {
+    const sugar = parseFloat(document.getElementById("sugar").value);
+    const weight = parseFloat(document.getElementById("weight").value);
+    const height = parseFloat(document.getElementById("height").value) / 100;
+
+    const outputBox = document.getElementById("outputBox");
+    const outputText = document.getElementById("outputText");
+
+    if (!sugar || !weight || !height) {
+      outputBox.style.display = 'block';
+      outputText.innerHTML = "⚠️ Please enter valid values for all fields.";
+      return;
+    }
+
+    const bmi = (weight / (height * height)).toFixed(1);
+    let bmiStatus = "";
+    if (bmi < 18.5) bmiStatus = "Underweight";
+    else if (bmi < 24.9) bmiStatus = "Normal weight";
+    else if (bmi < 29.9) bmiStatus = "Overweight";
+    else bmiStatus = "Obese";
+
+    let sugarStatus = "";
+    if (sugar < 70) sugarStatus = "Low blood sugar (hypoglycemia)";
+    else if (sugar <= 140) sugarStatus = "Normal sugar level";
+    else if (sugar <= 199) sugarStatus = "Prediabetes – Monitor closely";
+    else sugarStatus = "Diabetes – Seek medical attention";
+
+    outputBox.style.display = 'block';
+    outputText.innerHTML = `
+      <div class="insight-text">
+        ✅ <strong>BMI:</strong> ${bmi} (<em>${bmiStatus}</em>)<br>
+        💉 <strong>Sugar Level:</strong> ${sugar} mg/dL – <em>${sugarStatus}</em><br><br>
+        💡 <strong>Tip:</strong> Eat healthy, stay active, and visit your doctor regularly!
+      </div>
+
+      <div class="chart-area">
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+          <div class="chart-card">
+            <canvas id="bmiChart" width="260" height="160"></canvas>
+            <div style="margin-top: 10px; font-weight: bold;">BMI Gauge</div>
+          </div>
+
+          <div class="chart-card">
+            <canvas id="sugarChart" width="260" height="160"></canvas>
+            <div style="margin-top: 10px; font-weight: bold;">Sugar Level Gauge</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+          <span style="color:#60a5fa;">🔵 Underweight / Low</span> |
+          <span style="color:#4ade80;">🟢 Normal</span> |
+          <span style="color:#facc15;">🟡 Overweight / Prediabetes</span> |
+          <span style="color:#f87171;">🔴 Obese / Diabetes</span>
+        </div>
+      </div>
+    `;
+
+    if (sugarChart) sugarChart.destroy();
+
+    const sugarCtx = document.getElementById("sugarChart").getContext("2d");
+    sugarChart = new Chart(sugarCtx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [70, 70, 59, 101],
+          backgroundColor: ['#60a5fa', '#4ade80', '#facc15', '#f87171'],
+          borderWidth: 0,
+          circumference: 180,
+          rotation: -90,
+          cutout: '70%',
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      },
+      plugins: [{
+        id: 'sugarIndicator',
+        afterDraw(chart) {
+          const { ctx, chartArea } = chart;
+          const centerX = (chartArea.left + chartArea.right) / 2;
+          const centerY = (chartArea.top + chartArea.bottom) / 2 - 10;
+          ctx.save();
+          ctx.font = 'bold 16px "Segoe UI"';
+          ctx.fillStyle = '#111827';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Sugar`, centerX, centerY - 15);
+          ctx.fillText(`${sugar} mg/dL`, centerX, centerY + 12);
+          ctx.restore();
+        }
+      }]
+    });
+
+    if (bmiChart) bmiChart.destroy();
+
+    const ctx = document.getElementById("bmiChart").getContext("2d");
+    const bmiValue = parseFloat(bmi);
+
+    bmiChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [18.5, 6.4, 5, 5],
+          backgroundColor: ['#60a5fa', '#4ade80', '#facc15', '#f87171'],
+          borderWidth: 0,
+          circumference: 180,
+          rotation: -90,
+          cutout: '70%',
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      },
+      plugins: [{
+        id: 'bmiIndicator',
+        afterDraw(chart) {
+          const { ctx, chartArea } = chart;
+          const centerX = (chartArea.left + chartArea.right) / 2;
+          const centerY = (chartArea.top + chartArea.bottom) / 2 + 20;
+          ctx.save();
+          ctx.font = 'bold 18px Segoe UI';
+          ctx.fillStyle = '#1f2937';
+          ctx.textAlign = 'center';
+          ctx.fillText(`BMI: ${bmiValue}`, centerX, centerY);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
+  function goBack() {
+    window.history.back();
+  }
+
+  document.addEventListener('keydown', function (e) {
+    const inputs = ["sugar", "weight", "height"].map(id => document.getElementById(id));
+    const active = document.activeElement;
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const currentIndex = inputs.indexOf(active);
+      if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+        inputs[currentIndex + 1].focus();
+      } else if (currentIndex === inputs.length - 1) {
+        analyzeHealth();
+      }
+    }
+
+    if (e.key === "Backspace") {
+      const backButton = document.getElementById("backButton");
+      if (backButton) backButton.click();
+    }
+  });
+</script>
+</body>
+</html>
